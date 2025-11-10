@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 public enum MetodoPagamentoEnum {
     BOLETO("Boleto"),
     PIX("Pix"),
-    CARTAO_CREDITO("Cartão de crédido"),
+    CARTAO_CREDITO("Cartão de crédito"),
     CARTAO_DEBITO("Cartão de débito");
 
     private String descricao;

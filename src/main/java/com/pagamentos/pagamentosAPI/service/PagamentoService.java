@@ -4,11 +4,11 @@ import com.pagamentos.pagamentosAPI.entity.Pagamento;
 import com.pagamentos.pagamentosAPI.enums.MetodoPagamentoEnum;
 import com.pagamentos.pagamentosAPI.enums.StatusPagamentoEnum;
 import com.pagamentos.pagamentosAPI.exceptions.BadRequestException;
-import com.pagamentos.pagamentosAPI.exceptions.InvalidStatusChangeException;
 import com.pagamentos.pagamentosAPI.exceptions.NotFoundException;
 import com.pagamentos.pagamentosAPI.repository.PagamentoRepository;
 import com.pagamentos.pagamentosAPI.service.interfaces.IPagamentoService;
 import com.pagamentos.pagamentosAPI.util.ValidadorDadosFinanceiros;
+import com.pagamentos.pagamentosAPI.util.ValidadorStatusPagamento;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -45,20 +45,7 @@ public class PagamentoService implements IPagamentoService {
         Pagamento pagamento = repository.findById(id).orElseThrow(() ->
                 new NotFoundException("Pagamento não encontrado: " + id));
 
-        StatusPagamentoEnum statusAtual = pagamento.getStatusPagamento();
-
-        if (statusAtual == StatusPagamentoEnum.PENDENTE_PROCESSAMENTO) {
-            if (novoStatus != StatusPagamentoEnum.PROCESSADO_SUCESSO &&
-                novoStatus != StatusPagamentoEnum.PROCESSADO_FALHA) {
-                throw new InvalidStatusChangeException("Status inválido para pagamento pendente.");
-            } 
-        } else if (statusAtual == StatusPagamentoEnum.PROCESSADO_SUCESSO) {
-            throw new InvalidStatusChangeException("Pagamento processado com sucesso não pode ser alterado.");
-        } else if (statusAtual == StatusPagamentoEnum.PROCESSADO_FALHA) {
-            if (novoStatus != StatusPagamentoEnum.PENDENTE_PROCESSAMENTO) {
-                throw new InvalidStatusChangeException("Pagamento com falha só pode retornar para pendente.");
-            }
-        }
+        ValidadorStatusPagamento.validarTransicao(pagamento.getStatusPagamento(), novoStatus);
 
         pagamento.setStatusPagamento(novoStatus);
         return repository.save(pagamento);
